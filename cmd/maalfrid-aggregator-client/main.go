@@ -33,18 +33,29 @@ func main() {
 	flag.Parse()
 
 	address := fmt.Sprintf("%s:%d", serviceHost, servicePort)
-	client := aggregator.NewClient(address)
 
-	cmd := getSubcommand()
-
-	err := runCommand(cmd, client)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
+	if len(os.Args) < 2 {
+		usage()
+	}
+	cmd := os.Args[1]
+	switch cmd {
+	case
+		"detect",
+		"aggregate",
+		"sync-seeds",
+		"sync-entities",
+		"version":
+		if err := runCommand(cmd, address); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
+		}
+	default:
+		usage()
 	}
 }
 
-func runCommand(cmd string, client *aggregator.Client) error {
+func runCommand(cmd string, address string) error {
+	client := aggregator.NewClient(address)
 
 	if err := client.Dial(); err != nil {
 		return err
@@ -55,47 +66,28 @@ func runCommand(cmd string, client *aggregator.Client) error {
 	case "detect":
 		return client.RunLanguageDetection()
 	case "aggregate":
-		return client.RunLanguageDetection()
-	default:
-		return fmt.Errorf("%s", "unknown command")
-	}
-}
-
-func getSubcommand() string {
-	if len(os.Args) < 2 {
-		usage()
-	}
-
-	switch os.Args[1] {
-	case "detect":
-		break
-	case "aggregate":
-		break
-	case "version":
-		fmt.Printf("%s, %s\n", "Aggregator client", version.String())
-		os.Exit(0)
-	case "sync-entities":
-		notImplemented()
+		return client.RunAggregation()
 	case "sync-seeds":
-		notImplemented()
+		return client.SyncSeeds()
+	case "sync-entities":
+		return client.SyncEntities()
+	case "version":
+		_, err := fmt.Println(version.String())
+		return err
 	default:
-		usage()
+		return fmt.Errorf("%s: %s", "Unknown subcommand", cmd)
 	}
-
-	return os.Args[1]
-}
-
-func notImplemented() {
-	fmt.Println("Method not implemented")
-	os.Exit(1)
 }
 
 func usage() {
-	fmt.Printf(`usage: %s <command>
+	fmt.Println(`Usage:
+	maalfrid-aggregator-client <command>
 	
 Commands:
-	* detect
-	* aggregate
-`, os.Args[0])
+	detect		Initiate language detection of extracted texts (missing language code)
+	aggregate	Initiate aggregation of data from veidemann to maalfrid
+	sync-entities	Sync entities from veidemann to maalfrid
+	sync-seeds	Sync seeds from veidemann to maalfrid
+	version		Print version information`)
 	os.Exit(1)
 }

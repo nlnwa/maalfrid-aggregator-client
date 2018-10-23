@@ -57,30 +57,42 @@ func (ac *Client) RunLanguageDetection() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	_, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{})
-	return err
+	if _, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrapf(err, "failed to run language detection")
+	} else {
+		return nil
+	}
 }
 
 func (ac *Client) RunAggregation() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	_, err := ac.client.RunAggregation(ctx, &empty.Empty{})
-	return err
+	if _, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrapf(err, "failed to run aggregation")
+	} else {
+		return nil
+	}
 }
 
 func (ac *Client) SyncEntities() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	_, err := ac.client.SyncEntities(ctx, &empty.Empty{})
-	return err
+	if _, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrapf(err, "failed to sync entities")
+	} else {
+		return nil
+	}
 }
 
 func (ac *Client) SyncSeeds() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	_, err := ac.client.SyncSeeds(ctx, &empty.Empty{})
-	return err
+	if _, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrapf(err, "failed to sync seeds")
+	} else {
+		return nil
+	}
 }
