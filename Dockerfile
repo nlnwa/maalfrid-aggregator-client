@@ -20,8 +20,7 @@ LABEL maintainer="marius.beck@nb.no"
 
 COPY --from=0 /go/bin/maalfrid-aggregator-client /
 
-ENV PORT=8672 \
-    HOST=localhost \
+ENV HOST=localhost \
     PORT=8672
 
 ENTRYPOINT ["/maalfrid-aggregator-client"]
