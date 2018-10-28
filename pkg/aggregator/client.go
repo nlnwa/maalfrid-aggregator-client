@@ -68,7 +68,7 @@ func (ac *Client) RunAggregation() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if _, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{}); err != nil {
+	if _, err := ac.client.RunAggregation(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrapf(err, "failed to run aggregation")
 	} else {
 		return nil
@@ -79,7 +79,7 @@ func (ac *Client) SyncEntities() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if _, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{}); err != nil {
+	if _, err := ac.client.SyncEntities(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrapf(err, "failed to sync entities")
 	} else {
 		return nil
@@ -90,7 +90,7 @@ func (ac *Client) SyncSeeds() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if _, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{}); err != nil {
+	if _, err := ac.client.SyncSeeds(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrapf(err, "failed to sync seeds")
 	} else {
 		return nil
