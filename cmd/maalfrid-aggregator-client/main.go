@@ -17,66 +17,127 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/namsral/flag"
 
 	"github.com/nlnwa/maalfrid-aggregator-client/pkg/aggregator"
+	myFlag "github.com/nlnwa/maalfrid-aggregator-client/pkg/flag"
 	"github.com/nlnwa/maalfrid-aggregator-client/pkg/version"
 )
 
 func main() {
+	// global command parameters
 	serviceHost := "localhost"
 	servicePort := 3011
 
+	// aggregate command parameters
+	aggregateStartTime := ""
+	aggregateEndTime := ""
+
+	// sync command parameters
+	var entityLabels myFlag.ArrayFlag
+	entityName := ""
+
+	// detect command parameters
+	detectAll := false
+
+	// global flags
 	flag.StringVar(&serviceHost, "host", serviceHost, "maalfrid aggregator service host")
 	flag.IntVar(&servicePort, "port", servicePort, "maalfrid aggregator service port")
 	flag.Parse()
 
 	address := fmt.Sprintf("%s:%d", serviceHost, servicePort)
 
+	// aggregate command flags
+	aggregateCommand := flag.NewFlagSet("aggregate", flag.ExitOnError)
+	aggregateCommand.StringVar(&aggregateStartTime, "start-time", "", "lower bound of execution start time in RFC3339 format (inclusive)")
+	aggregateCommand.StringVar(&aggregateEndTime, "end-time", "", "upper bound of execution start time in RFC3339 format (exclusive)")
+
+	// sync command flags
+	syncCommand := flag.NewFlagSet("sync", flag.ExitOnError)
+	syncCommand.Var(&entityLabels, "label", "label selector on key:value format (can be specified multiple times)")
+	syncCommand.StringVar(&entityName, "name", entityName, "only synchronize entity with matching name")
+
+	// detect command flags
+	detectCommand := flag.NewFlagSet("detect", flag.ExitOnError)
+	detectCommand.BoolVar(&detectAll, "all", detectAll, "if language detection should process already detected texts")
+
 	if len(os.Args) < 2 {
 		usage()
+		os.Exit(0)
 	}
+
 	cmd := os.Args[1]
 	switch cmd {
-	case
-		"detect",
-		"aggregate",
-		"sync-seeds",
-		"sync-entities",
-		"version":
-		if err := runCommand(cmd, address); err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			os.Exit(1)
-		}
+	case "version":
+		fmt.Println(version.String())
+		os.Exit(0)
+	case "aggregate":
+		aggregateCommand.Parse(os.Args[2:])
+	case "sync":
+		syncCommand.Parse(os.Args[2:])
+	case "detect":
+		detectCommand.Parse(os.Args[2:])
 	default:
-		usage()
+		fmt.Fprintf(os.Stderr, "Error: %s \"%s\"\n", "unknown command", cmd)
+		fmt.Println("Run 'maalfrid-aggregator-client' (without subcommand) for usage")
+		os.Exit(1)
+	}
+
+	var err error
+	if aggregateCommand.Parsed() {
+		err = runAggregation(address, aggregateStartTime, aggregateEndTime)
+	}
+	if syncCommand.Parsed() {
+		err = syncEntities(address, entityLabels, entityName)
+	}
+	if detectCommand.Parsed() {
+		err = runLanguageDetection(address, detectAll)
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
 	}
 }
 
-func runCommand(cmd string, address string) error {
+func syncEntities(address string, labels []string, name string) error {
 	client := aggregator.NewClient(address)
-
 	if err := client.Dial(); err != nil {
 		return err
 	}
 	defer client.Hangup()
+	return client.SyncEntities(name, labels)
+}
 
-	switch cmd {
-	case "detect":
-		return client.RunLanguageDetection()
-	case "aggregate":
-		return client.RunAggregation()
-	case "sync-seeds":
-		return client.SyncSeeds()
-	case "sync-entities":
-		return client.SyncEntities()
-	case "version":
-		_, err := fmt.Println(version.String())
+func runAggregation(address string, startTimeString string, endTimeString string) error {
+	client := aggregator.NewClient(address)
+	if err := client.Dial(); err != nil {
 		return err
-	default:
-		return fmt.Errorf("%s: %s", "Unknown subcommand", cmd)
 	}
+	defer client.Hangup()
+	var startTime time.Time
+	var endTime time.Time
+	var err error
+	if len(startTimeString) > 0 {
+		startTime, err = time.Parse(time.RFC3339, startTimeString)
+	}
+	if len(endTimeString) > 0 {
+		endTime, err = time.Parse(time.RFC3339, endTimeString)
+	}
+	if err != nil {
+		return err
+	}
+	return client.RunAggregation(startTime, endTime)
+}
+
+func runLanguageDetection(address string, detectAll bool) error {
+	client := aggregator.NewClient(address)
+	if err := client.Dial(); err != nil {
+		return err
+	}
+	defer client.Hangup()
+	return client.RunLanguageDetection(detectAll)
 }
 
 func usage() {
@@ -84,10 +145,11 @@ func usage() {
 	maalfrid-aggregator-client <command>
 	
 Commands:
-	detect		Initiate language detection of extracted texts (missing language code)
-	aggregate	Initiate aggregation of data from veidemann to maalfrid
-	sync-entities	Sync entities from veidemann to maalfrid
-	sync-seeds	Sync seeds from veidemann to maalfrid
-	version		Print version information`)
-	os.Exit(1)
+  detect	Initiate language detection of extracted texts in veidemann
+  aggregate	Initiate aggregation of data from veidemann
+  sync		Sync entities and seeds from veidemann
+  version	Print version information
+
+Use "maalfrid-aggregator-client <command> --help" for more information about a given command.
+Use "maalfrid-aggregator-client options --help" for a list of global command-line options (applies to all commands).`)
 }

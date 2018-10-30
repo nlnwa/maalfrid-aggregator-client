@@ -17,12 +17,14 @@ package aggregator
 
 import (
 	"context"
+	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	api "github.com/nlnwa/maalfrid-api/gen/go/maalfrid/service/aggregator"
 )
 
@@ -53,45 +55,72 @@ func (ac *Client) Hangup() error {
 	}
 }
 
-func (ac *Client) RunLanguageDetection() error {
+func (ac *Client) RunLanguageDetection(detectAll bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if _, err := ac.client.RunLanguageDetection(ctx, &empty.Empty{}); err != nil {
+	req := &api.RunLanguageDetectionRequest{
+		DetectAll: detectAll,
+	}
+	if _, err := ac.client.RunLanguageDetection(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to run language detection")
 	} else {
 		return nil
 	}
 }
 
-func (ac *Client) RunAggregation() error {
+func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if _, err := ac.client.RunAggregation(ctx, &empty.Empty{}); err != nil {
+	var err error
+	var defaultTime time.Time
+	var startTimeProto *timestamp.Timestamp
+	var endTimeProto *timestamp.Timestamp
+
+	if defaultTime.Equal(startTime) {
+		startTimeProto = nil
+	} else {
+		startTimeProto, err = ptypes.TimestampProto(startTime)
+	}
+	if defaultTime.Equal(endTime) {
+		endTimeProto = nil
+	} else {
+		endTimeProto, err = ptypes.TimestampProto(endTime)
+	}
+	if err != nil {
+		return err
+	}
+	req := &api.RunAggregationRequest{
+		StartTime: startTimeProto,
+		EndTime:   endTimeProto,
+	}
+	if _, err := ac.client.RunAggregation(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to run aggregation")
 	} else {
 		return nil
 	}
 }
 
-func (ac *Client) SyncEntities() error {
+func (ac *Client) SyncEntities(name string, labels []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if _, err := ac.client.SyncEntities(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrapf(err, "failed to sync entities")
-	} else {
-		return nil
+	var labelsProto []*api.Label
+	for _, label := range labels {
+		parts := strings.Split(label, ":")
+		if len(parts) == 1 {
+			labelsProto = append(labelsProto, &api.Label{Value: parts[0]})
+		} else {
+			labelsProto = append(labelsProto, &api.Label{Key: parts[0], Value: parts[1]})
+		}
 	}
-}
-
-func (ac *Client) SyncSeeds() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	if _, err := ac.client.SyncSeeds(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrapf(err, "failed to sync seeds")
+	req := &api.SyncEntitiesRequest{
+		Name:   name,
+		Labels: labelsProto,
+	}
+	if _, err := ac.client.SyncEntities(ctx, req); err != nil {
+		return errors.Wrapf(err, "failed to sync entities")
 	} else {
 		return nil
 	}
