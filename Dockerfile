@@ -1,5 +1,7 @@
 FROM golang:alpine
 
+RUN apk add --no-cache --update alpine-sdk
+
 COPY . /go/src/github.com/nlnwa/maalfrid-aggregator-client
 
 RUN cd /go/src/github.com/nlnwa/maalfrid-aggregator-client \
