@@ -102,6 +102,39 @@ func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
 	}
 }
 
+func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	var err error
+	var defaultTime time.Time
+	var startTimeProto *timestamp.Timestamp
+	var endTimeProto *timestamp.Timestamp
+
+	if defaultTime.Equal(startTime) {
+		startTimeProto = nil
+	} else {
+		startTimeProto, err = ptypes.TimestampProto(startTime)
+	}
+	if defaultTime.Equal(endTime) {
+		endTimeProto = nil
+	} else {
+		endTimeProto, err = ptypes.TimestampProto(endTime)
+	}
+	if err != nil {
+		return err
+	}
+	req := &api.FilterAggregateRequest{
+		StartTime: startTimeProto,
+		EndTime:   endTimeProto,
+	}
+	if _, err := ac.client.FilterAggregate(ctx, req); err != nil {
+		return errors.Wrapf(err, "failed to run aggregation")
+	} else {
+		return nil
+	}
+}
+
 func (ac *Client) SyncEntities(name string, labels []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
