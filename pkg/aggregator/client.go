@@ -32,10 +32,11 @@ type Client struct {
 	address string
 	cc      *grpc.ClientConn
 	client  api.AggregatorClient
+	timeout time.Duration
 }
 
 func NewClient(address string) *Client {
-	return &Client{address: address}
+	return &Client{address: address, timeout: 10}
 }
 
 func (ac *Client) Dial() (err error) {
@@ -56,7 +57,7 @@ func (ac *Client) Hangup() error {
 }
 
 func (ac *Client) RunLanguageDetection(detectAll bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
 
 	req := &api.RunLanguageDetectionRequest{
@@ -70,7 +71,7 @@ func (ac *Client) RunLanguageDetection(detectAll bool) error {
 }
 
 func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
 
 	var err error
@@ -103,7 +104,7 @@ func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
 }
 
 func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
 
 	var err error
@@ -129,14 +130,14 @@ func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time) error 
 		EndTime:   endTimeProto,
 	}
 	if _, err := ac.client.FilterAggregate(ctx, req); err != nil {
-		return errors.Wrapf(err, "failed to run aggregation")
+		return errors.Wrapf(err, "failed to filter aggregate")
 	} else {
 		return nil
 	}
 }
 
 func (ac *Client) SyncEntities(name string, labels []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
 
 	var labelsProto []*api.Label

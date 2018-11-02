@@ -65,8 +65,8 @@ func main() {
 
 	// aggregate command flags
 	filterCommand := flag.NewFlagSet("filter", flag.ExitOnError)
-	filterCommand.StringVar(&aggregateStartTime, "start-time", "", "lower bound of execution start time in RFC3339 format (inclusive)")
-	filterCommand.StringVar(&aggregateEndTime, "end-time", "", "upper bound of execution start time in RFC3339 format (exclusive)")
+	filterCommand.StringVar(&filterStartTime, "start-time", "", "lower bound of execution start time in RFC3339 format (inclusive)")
+	filterCommand.StringVar(&filterEndTime, "end-time", "", "upper bound of execution start time in RFC3339 format (exclusive)")
 
 	// detect command flags
 	detectCommand := flag.NewFlagSet("detect", flag.ExitOnError)
@@ -99,14 +99,11 @@ func main() {
 	var err error
 	if aggregateCommand.Parsed() {
 		err = runAggregation(address, aggregateStartTime, aggregateEndTime)
-	}
-	if syncCommand.Parsed() {
+	} else if syncCommand.Parsed() {
 		err = syncEntities(address, entityLabels, entityName)
-	}
-	if detectCommand.Parsed() {
+	} else if detectCommand.Parsed() {
 		err = runLanguageDetection(address, detectAll)
-	}
-	if filterCommand.Parsed() {
+	} else if filterCommand.Parsed() {
 		err = filterAggregate(address, filterStartTime, filterEndTime)
 	}
 	if err != nil {
@@ -136,11 +133,14 @@ func runAggregation(address string, startTimeString string, endTimeString string
 	if len(startTimeString) > 0 {
 		startTime, err = time.Parse(time.RFC3339, startTimeString)
 	}
+	if err != nil {
+		return fmt.Errorf("invalid start-time: %s", err)
+	}
 	if len(endTimeString) > 0 {
 		endTime, err = time.Parse(time.RFC3339, endTimeString)
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid end-time: %s", err)
 	}
 	return client.RunAggregation(startTime, endTime)
 }
@@ -157,11 +157,14 @@ func filterAggregate(address string, startTimeString string, endTimeString strin
 	if len(startTimeString) > 0 {
 		startTime, err = time.Parse(time.RFC3339, startTimeString)
 	}
+	if err != nil {
+		return fmt.Errorf("invalid start-time: %s", err)
+	}
 	if len(endTimeString) > 0 {
 		endTime, err = time.Parse(time.RFC3339, endTimeString)
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid end-time: %s", err)
 	}
 	return client.FilterAggregate(startTime, endTime)
 }
