@@ -103,7 +103,7 @@ func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
 	}
 }
 
-func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time) error {
+func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time, seedId string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
 
@@ -128,6 +128,7 @@ func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time) error 
 	req := &api.FilterAggregateRequest{
 		StartTime: startTimeProto,
 		EndTime:   endTimeProto,
+		SeedId:    seedId,
 	}
 	if _, err := ac.client.FilterAggregate(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to filter aggregate")

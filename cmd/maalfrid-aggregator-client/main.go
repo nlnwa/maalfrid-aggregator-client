@@ -38,6 +38,7 @@ func main() {
 	// filter command parameters
 	filterStartTime := ""
 	filterEndTime := ""
+	filterSeedId := ""
 
 	// sync command parameters
 	var entityLabels myFlag.ArrayFlag
@@ -55,8 +56,8 @@ func main() {
 
 	// aggregate command flags
 	aggregateCommand := flag.NewFlagSet("aggregate", flag.ExitOnError)
-	aggregateCommand.StringVar(&aggregateStartTime, "start-time", "", "lower bound of execution start time in RFC3339 format (inclusive)")
-	aggregateCommand.StringVar(&aggregateEndTime, "end-time", "", "upper bound of execution start time in RFC3339 format (exclusive)")
+	aggregateCommand.StringVar(&aggregateStartTime, "start-time", aggregateStartTime, "lower bound of execution start time in RFC3339 format (inclusive)")
+	aggregateCommand.StringVar(&aggregateEndTime, "end-time", aggregateEndTime, "upper bound of execution start time in RFC3339 format (exclusive)")
 
 	// sync command flags
 	syncCommand := flag.NewFlagSet("sync", flag.ExitOnError)
@@ -65,8 +66,9 @@ func main() {
 
 	// aggregate command flags
 	filterCommand := flag.NewFlagSet("filter", flag.ExitOnError)
-	filterCommand.StringVar(&filterStartTime, "start-time", "", "lower bound of execution start time in RFC3339 format (inclusive)")
-	filterCommand.StringVar(&filterEndTime, "end-time", "", "upper bound of execution start time in RFC3339 format (exclusive)")
+	filterCommand.StringVar(&filterSeedId, "seed-id", filterSeedId, "limit filtering to seed with this id")
+	filterCommand.StringVar(&filterStartTime, "start-time", filterStartTime, "lower bound of execution start time in RFC3339 format (inclusive)")
+	filterCommand.StringVar(&filterEndTime, "end-time", filterEndTime, "upper bound of execution start time in RFC3339 format (exclusive)")
 
 	// detect command flags
 	detectCommand := flag.NewFlagSet("detect", flag.ExitOnError)
@@ -104,7 +106,7 @@ func main() {
 	} else if detectCommand.Parsed() {
 		err = runLanguageDetection(address, detectAll)
 	} else if filterCommand.Parsed() {
-		err = filterAggregate(address, filterStartTime, filterEndTime)
+		err = filterAggregate(address, filterStartTime, filterEndTime, filterSeedId)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -145,7 +147,7 @@ func runAggregation(address string, startTimeString string, endTimeString string
 	return client.RunAggregation(startTime, endTime)
 }
 
-func filterAggregate(address string, startTimeString string, endTimeString string) error {
+func filterAggregate(address string, startTimeString string, endTimeString string, seedId string) error {
 	client := aggregator.NewClient(address)
 	if err := client.Dial(); err != nil {
 		return err
@@ -166,7 +168,7 @@ func filterAggregate(address string, startTimeString string, endTimeString strin
 	if err != nil {
 		return fmt.Errorf("invalid end-time: %s", err)
 	}
-	return client.FilterAggregate(startTime, endTime)
+	return client.FilterAggregate(startTime, endTime, seedId)
 }
 
 func runLanguageDetection(address string, detectAll bool) error {
