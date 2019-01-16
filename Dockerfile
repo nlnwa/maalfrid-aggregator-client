@@ -2,16 +2,18 @@ FROM golang:alpine
 
 RUN apk add --no-cache --update alpine-sdk
 
-COPY . /go/src/github.com/nlnwa/maalfrid-aggregator-client
+COPY . /src/maalfrid-aggregator-client
 
-RUN cd /go/src/github.com/nlnwa/maalfrid-aggregator-client \
-&& go get ./... \
+# build flags:
+#  -w Omit the DWARF symbol table.
+#  -X Set the value of the string variable in importpath named name to value.
+
+RUN cd /src/maalfrid-aggregator-client \
 && VERSION=$(./scripts/git-version) \
 CGO_ENABLED=0 \
-go install -a -tags netgo -v -ldflags "-w -X github.com/nlnwa/maalfrid-aggregator-client/pkg/version.Version=$VERSION" \
+go install \
+-a -tags netgo -v -ldflags "-w -X github.com/nlnwa/maalfrid-aggregator-client/pkg/version.Version=$VERSION" \
 github.com/nlnwa/maalfrid-aggregator-client/cmd/...
-# -w Omit the DWARF symbol table.
-# -X Set the value of the string variable in importpath named name to value.
 
 
 FROM scratch
