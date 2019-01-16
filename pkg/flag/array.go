@@ -2,13 +2,16 @@ package flag
 
 import "strings"
 
+// An ArrayFlag holds the values for multiple flags with the same name
 type ArrayFlag []string
 
-func (i *ArrayFlag) String() string {
-	return strings.Join(*i, ",")
+// String returns the string representation of the flags in the array
+func (arrayFlag *ArrayFlag) String() string {
+	return strings.Join(*arrayFlag, ",")
 }
 
-func (i *ArrayFlag) Set(value string) error {
-	*i = append(*i, value)
+// Set the value of the flag
+func (arrayFlag *ArrayFlag) Set(value string) error {
+	*arrayFlag = append(*arrayFlag, value)
 	return nil
 }

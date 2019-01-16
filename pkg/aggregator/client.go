@@ -28,34 +28,37 @@ import (
 	api "github.com/nlnwa/maalfrid-api/gen/go/maalfrid/service/aggregator"
 )
 
+// Client represents the client to the aggregator service.
 type Client struct {
-	address string
-	cc      *grpc.ClientConn
-	client  api.AggregatorClient
-	timeout time.Duration
+	address string               // address in the form "host:port"
+	cc      *grpc.ClientConn     // gRPC connection
+	client  api.AggregatorClient // gRPC client
+	timeout time.Duration        // timeout duration
 }
 
+// NewClient creates a new client with the specified address and timeout.
 func NewClient(address string) *Client {
 	return &Client{address: address, timeout: 10}
 }
 
+// Dial makes a connection to the gRPC service.
 func (ac *Client) Dial() (err error) {
 	if ac.cc, err = grpc.Dial(ac.address, grpc.WithInsecure()); err != nil {
 		return errors.Wrapf(err, "failed to dial: %s", ac.address)
-	} else {
-		ac.client = api.NewAggregatorClient(ac.cc)
-		return
 	}
+	ac.client = api.NewAggregatorClient(ac.cc)
+	return
 }
 
+// Hangup closes the connection to the gRPC service.
 func (ac *Client) Hangup() error {
 	if ac.cc != nil {
 		return ac.cc.Close()
-	} else {
-		return nil
 	}
+	return nil
 }
 
+// RunLanguageDetection calls the gRPC method with the same name.
 func (ac *Client) RunLanguageDetection(detectAll bool) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
@@ -65,11 +68,11 @@ func (ac *Client) RunLanguageDetection(detectAll bool) error {
 	}
 	if _, err := ac.client.RunLanguageDetection(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to run language detection")
-	} else {
-		return nil
 	}
+	return nil
 }
 
+// RunAggregation calls the gRPC method with the same name.
 func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
@@ -98,12 +101,12 @@ func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
 	}
 	if _, err := ac.client.RunAggregation(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to run aggregation")
-	} else {
-		return nil
 	}
+	return nil
 }
 
-func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time, seedId string) error {
+// FilterAggregate calls the gRPC method with the same name.
+func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time, seedID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
 
@@ -128,15 +131,15 @@ func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time, seedId
 	req := &api.FilterAggregateRequest{
 		StartTime: startTimeProto,
 		EndTime:   endTimeProto,
-		SeedId:    seedId,
+		SeedId:    seedID,
 	}
 	if _, err := ac.client.FilterAggregate(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to filter aggregate")
-	} else {
-		return nil
 	}
+	return nil
 }
 
+// SyncEntities calls the gRPC method with the same name.
 func (ac *Client) SyncEntities(name string, labels []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
 	defer cancel()
@@ -156,7 +159,6 @@ func (ac *Client) SyncEntities(name string, labels []string) error {
 	}
 	if _, err := ac.client.SyncEntities(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to sync entities")
-	} else {
-		return nil
 	}
+	return nil
 }

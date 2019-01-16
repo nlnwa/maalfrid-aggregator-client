@@ -38,7 +38,7 @@ func main() {
 	// filter command parameters
 	filterStartTime := ""
 	filterEndTime := ""
-	filterSeedId := ""
+	filterSeedID := ""
 
 	// sync command parameters
 	var entityLabels myFlag.ArrayFlag
@@ -66,7 +66,7 @@ func main() {
 
 	// aggregate command flags
 	filterCommand := flag.NewFlagSet("filter", flag.ExitOnError)
-	filterCommand.StringVar(&filterSeedId, "seed-id", filterSeedId, "limit filtering to seed with this id")
+	filterCommand.StringVar(&filterSeedID, "seed-id", filterSeedID, "limit filtering to seed with this id")
 	filterCommand.StringVar(&filterStartTime, "start-time", filterStartTime, "lower bound of execution start time in RFC3339 format (inclusive)")
 	filterCommand.StringVar(&filterEndTime, "end-time", filterEndTime, "upper bound of execution start time in RFC3339 format (exclusive)")
 
@@ -79,37 +79,70 @@ func main() {
 		os.Exit(0)
 	}
 
+	var err error
 	cmd := os.Args[1]
 	switch cmd {
 	case "version":
 		fmt.Println(version.String())
 		os.Exit(0)
 	case "aggregate":
-		aggregateCommand.Parse(os.Args[2:])
+		err = aggregateCommand.Parse(os.Args[2:])
 	case "sync":
-		syncCommand.Parse(os.Args[2:])
+		err = syncCommand.Parse(os.Args[2:])
 	case "detect":
-		detectCommand.Parse(os.Args[2:])
+		err = detectCommand.Parse(os.Args[2:])
 	case "filter":
-		filterCommand.Parse(os.Args[2:])
+		err = filterCommand.Parse(os.Args[2:])
 	default:
-		fmt.Fprintf(os.Stderr, "Error: %s \"%s\"\n", "unknown command", cmd)
-		fmt.Println("Run 'maalfrid-aggregator-client' (without subcommand) for usage")
+		err = fmt.Errorf("unknown command \"%s\"", cmd)
+	}
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
+		usage()
 		os.Exit(1)
 	}
 
-	var err error
 	if aggregateCommand.Parsed() {
-		err = runAggregation(address, aggregateStartTime, aggregateEndTime)
+		var startTime time.Time
+		var endTime time.Time
+		var err error
+		if len(aggregateStartTime) > 0 {
+			startTime, err = time.Parse(time.RFC3339, aggregateStartTime)
+		}
+		if err != nil {
+			err = fmt.Errorf("invalid start-time: %s", err)
+		}
+		if len(aggregateEndTime) > 0 {
+			endTime, err = time.Parse(time.RFC3339, aggregateEndTime)
+		}
+		if err != nil {
+			err = fmt.Errorf("invalid end-time: %s", err)
+		}
+		err = runAggregation(address, startTime, endTime)
 	} else if syncCommand.Parsed() {
 		err = syncEntities(address, entityLabels, entityName)
 	} else if detectCommand.Parsed() {
 		err = runLanguageDetection(address, detectAll)
 	} else if filterCommand.Parsed() {
-		err = filterAggregate(address, filterStartTime, filterEndTime, filterSeedId)
+		var startTime time.Time
+		var endTime time.Time
+		var err error
+		if len(aggregateStartTime) > 0 {
+			startTime, err = time.Parse(time.RFC3339, aggregateStartTime)
+		}
+		if err != nil {
+			err = fmt.Errorf("invalid start-time: %s", err)
+		}
+		if len(aggregateEndTime) > 0 {
+			endTime, err = time.Parse(time.RFC3339, aggregateEndTime)
+		}
+		if err != nil {
+			err = fmt.Errorf("invalid end-time: %s", err)
+		}
+		err = filterAggregate(address, startTime, endTime, filterSeedID)
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
 }
@@ -119,56 +152,26 @@ func syncEntities(address string, labels []string, name string) error {
 	if err := client.Dial(); err != nil {
 		return err
 	}
-	defer client.Hangup()
+	defer func() { _ = client.Hangup() }()
 	return client.SyncEntities(name, labels)
 }
 
-func runAggregation(address string, startTimeString string, endTimeString string) error {
+func runAggregation(address string, startTime time.Time, endTime time.Time) error {
 	client := aggregator.NewClient(address)
 	if err := client.Dial(); err != nil {
 		return err
 	}
-	defer client.Hangup()
-	var startTime time.Time
-	var endTime time.Time
-	var err error
-	if len(startTimeString) > 0 {
-		startTime, err = time.Parse(time.RFC3339, startTimeString)
-	}
-	if err != nil {
-		return fmt.Errorf("invalid start-time: %s", err)
-	}
-	if len(endTimeString) > 0 {
-		endTime, err = time.Parse(time.RFC3339, endTimeString)
-	}
-	if err != nil {
-		return fmt.Errorf("invalid end-time: %s", err)
-	}
+	defer func() { _ = client.Hangup() }()
 	return client.RunAggregation(startTime, endTime)
 }
 
-func filterAggregate(address string, startTimeString string, endTimeString string, seedId string) error {
+func filterAggregate(address string, startTime time.Time, endTime time.Time, seedID string) error {
 	client := aggregator.NewClient(address)
 	if err := client.Dial(); err != nil {
 		return err
 	}
-	defer client.Hangup()
-	var startTime time.Time
-	var endTime time.Time
-	var err error
-	if len(startTimeString) > 0 {
-		startTime, err = time.Parse(time.RFC3339, startTimeString)
-	}
-	if err != nil {
-		return fmt.Errorf("invalid start-time: %s", err)
-	}
-	if len(endTimeString) > 0 {
-		endTime, err = time.Parse(time.RFC3339, endTimeString)
-	}
-	if err != nil {
-		return fmt.Errorf("invalid end-time: %s", err)
-	}
-	return client.FilterAggregate(startTime, endTime, seedId)
+	defer func() { _ = client.Hangup() }()
+	return client.FilterAggregate(startTime, endTime, seedID)
 }
 
 func runLanguageDetection(address string, detectAll bool) error {
@@ -176,7 +179,7 @@ func runLanguageDetection(address string, detectAll bool) error {
 	if err := client.Dial(); err != nil {
 		return err
 	}
-	defer client.Hangup()
+	defer func() { _ = client.Hangup() }()
 	return client.RunLanguageDetection(detectAll)
 }
 
@@ -191,6 +194,6 @@ Commands:
   filter	Filter aggregated data
   version	Print version information
 
-Use "maalfrid-aggregator-client <command> --help" for more information about a given command.
-Use "maalfrid-aggregator-client --help" for a list of global command-line options (applies to all commands).`)
+Use "maalfrid-aggregator-client <command> -help" for more information about a given command.
+Use "maalfrid-aggregator-client -help" for a list of global command-line options (applies to all commands).`)
 }
