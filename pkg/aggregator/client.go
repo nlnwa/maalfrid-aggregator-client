@@ -28,17 +28,23 @@ import (
 	api "github.com/nlnwa/maalfrid-api/gen/go/maalfrid/service/aggregator"
 )
 
+// Client represents the client to the aggregator service.
 type Client struct {
-	address string
-	cc      *grpc.ClientConn
-	client  api.AggregatorClient
-	timeout time.Duration
+	address string               // address in the form "host:port"
+	cc      *grpc.ClientConn     // gRPC connection
+	client  api.AggregatorClient // gRPC client
+	timeout time.Duration        // timeout duration
 }
 
-func NewClient(address string) *Client {
-	return &Client{address: address, timeout: 10}
+// NewClient creates a new client with the specified address and timeout.
+func NewClient(address string, timeout time.Duration) *Client {
+	if timeout == 0 {
+		timeout = 10
+	}
+	return &Client{address: address, timeout: timeout}
 }
 
+// Dial makes a connection to the gRPC service
 func (ac *Client) Dial() (err error) {
 	if ac.cc, err = grpc.Dial(ac.address, grpc.WithInsecure()); err != nil {
 		return errors.Wrapf(err, "failed to dial: %s", ac.address)
@@ -48,6 +54,7 @@ func (ac *Client) Dial() (err error) {
 	}
 }
 
+// Hangup closes the connection to the gRPC service
 func (ac *Client) Hangup() error {
 	if ac.cc != nil {
 		return ac.cc.Close()
