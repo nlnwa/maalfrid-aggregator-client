@@ -20,8 +20,10 @@ import (
 	"runtime"
 )
 
+// Version is set by the build scripts
 var Version = "was not built properly"
 
+// String returns a string representation of the version and runtime environment
 func String() string {
 	return fmt.Sprintf(`Version: %s, Go version: %s, Go OS/ARCH: %s %s`,
 		Version,

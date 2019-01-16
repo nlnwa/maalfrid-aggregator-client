@@ -38,7 +38,7 @@ func main() {
 	// filter command parameters
 	filterStartTime := ""
 	filterEndTime := ""
-	filterSeedId := ""
+	filterSeedID := ""
 
 	// sync command parameters
 	var entityLabels myFlag.ArrayFlag
@@ -66,7 +66,7 @@ func main() {
 
 	// aggregate command flags
 	filterCommand := flag.NewFlagSet("filter", flag.ExitOnError)
-	filterCommand.StringVar(&filterSeedId, "seed-id", filterSeedId, "limit filtering to seed with this id")
+	filterCommand.StringVar(&filterSeedID, "seed-id", filterSeedID, "limit filtering to seed with this id")
 	filterCommand.StringVar(&filterStartTime, "start-time", filterStartTime, "lower bound of execution start time in RFC3339 format (inclusive)")
 	filterCommand.StringVar(&filterEndTime, "end-time", filterEndTime, "upper bound of execution start time in RFC3339 format (exclusive)")
 
@@ -94,7 +94,7 @@ func main() {
 	case "filter":
 		err = filterCommand.Parse(os.Args[2:])
 	default:
-		err = fmt.Errorf("Error: %s \"%s\"\n", "unknown command", cmd)
+		err = fmt.Errorf("unknown command \"%s\"", cmd)
 	}
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -139,7 +139,7 @@ func main() {
 		if err != nil {
 			err = fmt.Errorf("invalid end-time: %s", err)
 		}
-		err = filterAggregate(address, startTime, endTime, filterSeedId)
+		err = filterAggregate(address, startTime, endTime, filterSeedID)
 	}
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -165,13 +165,13 @@ func runAggregation(address string, startTime time.Time, endTime time.Time) erro
 	return client.RunAggregation(startTime, endTime)
 }
 
-func filterAggregate(address string, startTime time.Time, endTime time.Time, seedId string) error {
+func filterAggregate(address string, startTime time.Time, endTime time.Time, seedID string) error {
 	client := aggregator.NewClient(address)
 	if err := client.Dial(); err != nil {
 		return err
 	}
 	defer func() { _ = client.Hangup() }()
-	return client.FilterAggregate(startTime, endTime, seedId)
+	return client.FilterAggregate(startTime, endTime, seedID)
 }
 
 func runLanguageDetection(address string, detectAll bool) error {
