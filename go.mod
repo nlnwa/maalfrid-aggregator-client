@@ -1,7 +1,7 @@
 module github.com/nlnwa/maalfrid-aggregator-client
 
 require (
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.3.1
 	github.com/google/pprof v0.0.0-20190109223431-e84dfd68c163 // indirect
 	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
 	github.com/namsral/flag v1.7.4-pre
