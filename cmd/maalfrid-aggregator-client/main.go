@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -105,7 +106,6 @@ func main() {
 	if aggregateCommand.Parsed() {
 		var startTime time.Time
 		var endTime time.Time
-		var err error
 		if len(aggregateStartTime) > 0 {
 			startTime, err = time.Parse(time.RFC3339, aggregateStartTime)
 		}
@@ -126,7 +126,6 @@ func main() {
 	} else if filterCommand.Parsed() {
 		var startTime time.Time
 		var endTime time.Time
-		var err error
 		if len(aggregateStartTime) > 0 {
 			startTime, err = time.Parse(time.RFC3339, aggregateStartTime)
 		}
@@ -153,7 +152,7 @@ func syncEntities(address string, labels []string, name string) error {
 		return err
 	}
 	defer func() { _ = client.Hangup() }()
-	return client.SyncEntities(name, labels)
+	return client.SyncEntities(context.Background(), name, labels)
 }
 
 func runAggregation(address string, startTime time.Time, endTime time.Time) error {
@@ -162,7 +161,7 @@ func runAggregation(address string, startTime time.Time, endTime time.Time) erro
 		return err
 	}
 	defer func() { _ = client.Hangup() }()
-	return client.RunAggregation(startTime, endTime)
+	return client.RunAggregation(context.Background(), startTime, endTime)
 }
 
 func filterAggregate(address string, startTime time.Time, endTime time.Time, seedID string) error {
@@ -171,7 +170,7 @@ func filterAggregate(address string, startTime time.Time, endTime time.Time, see
 		return err
 	}
 	defer func() { _ = client.Hangup() }()
-	return client.FilterAggregate(startTime, endTime, seedID)
+	return client.FilterAggregate(context.Background(), startTime, endTime, seedID)
 }
 
 func runLanguageDetection(address string, detectAll bool) error {
@@ -180,7 +179,7 @@ func runLanguageDetection(address string, detectAll bool) error {
 		return err
 	}
 	defer func() { _ = client.Hangup() }()
-	return client.RunLanguageDetection(detectAll)
+	return client.RunLanguageDetection(context.Background(), detectAll)
 }
 
 func usage() {

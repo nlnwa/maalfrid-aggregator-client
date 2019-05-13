@@ -59,10 +59,7 @@ func (ac *Client) Hangup() error {
 }
 
 // RunLanguageDetection calls the gRPC method with the same name.
-func (ac *Client) RunLanguageDetection(detectAll bool) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
-	defer cancel()
-
+func (ac *Client) RunLanguageDetection(ctx context.Context, detectAll bool) error {
 	req := &api.RunLanguageDetectionRequest{
 		DetectAll: detectAll,
 	}
@@ -73,10 +70,7 @@ func (ac *Client) RunLanguageDetection(detectAll bool) error {
 }
 
 // RunAggregation calls the gRPC method with the same name.
-func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
-	defer cancel()
-
+func (ac *Client) RunAggregation(ctx context.Context, startTime time.Time, endTime time.Time) error {
 	var err error
 	var defaultTime time.Time
 	var startTimeProto *timestamp.Timestamp
@@ -106,10 +100,7 @@ func (ac *Client) RunAggregation(startTime time.Time, endTime time.Time) error {
 }
 
 // FilterAggregate calls the gRPC method with the same name.
-func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time, seedID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
-	defer cancel()
-
+func (ac *Client) FilterAggregate(ctx context.Context, startTime time.Time, endTime time.Time, seedID string) error {
 	var err error
 	var defaultTime time.Time
 	var startTimeProto *timestamp.Timestamp
@@ -140,10 +131,7 @@ func (ac *Client) FilterAggregate(startTime time.Time, endTime time.Time, seedID
 }
 
 // SyncEntities calls the gRPC method with the same name.
-func (ac *Client) SyncEntities(name string, labels []string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*ac.timeout)
-	defer cancel()
-
+func (ac *Client) SyncEntities(ctx context.Context, name string, labels []string) error {
 	var labelsProto []*api.Label
 	for _, label := range labels {
 		parts := strings.Split(label, ":")
