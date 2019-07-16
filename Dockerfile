@@ -15,8 +15,7 @@ COPY . .
 #  -w Omit the DWARF symbol table.
 #  -X Set the value of the string variable in importpath named name to value.
 RUN VERSION=$(./scripts/git-version) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a -v \
--ldflags "-w -X github.com/nlnwa/maalfrid-aggregator-client/pkg/version.Version=${VERSION}" \
-./cmd/...
+-ldflags "-w -X github.com/nlnwa/maalfrid-aggregator-client/pkg/version.Version=${VERSION}"
 
 
 FROM scratch

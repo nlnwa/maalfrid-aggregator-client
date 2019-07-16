@@ -20,11 +20,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
 	api "github.com/nlnwa/maalfrid-api/gen/go/maalfrid/service/aggregator"
 )
 
@@ -70,28 +68,9 @@ func (ac *Client) RunLanguageDetection(ctx context.Context, detectAll bool) erro
 }
 
 // RunAggregation calls the gRPC method with the same name.
-func (ac *Client) RunAggregation(ctx context.Context, startTime time.Time, endTime time.Time) error {
-	var err error
-	var defaultTime time.Time
-	var startTimeProto *timestamp.Timestamp
-	var endTimeProto *timestamp.Timestamp
-
-	if defaultTime.Equal(startTime) {
-		startTimeProto = nil
-	} else {
-		startTimeProto, err = ptypes.TimestampProto(startTime)
-	}
-	if defaultTime.Equal(endTime) {
-		endTimeProto = nil
-	} else {
-		endTimeProto, err = ptypes.TimestampProto(endTime)
-	}
-	if err != nil {
-		return err
-	}
+func (ac *Client) RunAggregation(ctx context.Context, jobExecutionId string) error {
 	req := &api.RunAggregationRequest{
-		StartTime: startTimeProto,
-		EndTime:   endTimeProto,
+		JobExecutionId: jobExecutionId,
 	}
 	if _, err := ac.client.RunAggregation(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to run aggregation")
@@ -100,28 +79,9 @@ func (ac *Client) RunAggregation(ctx context.Context, startTime time.Time, endTi
 }
 
 // FilterAggregate calls the gRPC method with the same name.
-func (ac *Client) FilterAggregate(ctx context.Context, startTime time.Time, endTime time.Time, seedID string) error {
-	var err error
-	var defaultTime time.Time
-	var startTimeProto *timestamp.Timestamp
-	var endTimeProto *timestamp.Timestamp
-
-	if defaultTime.Equal(startTime) {
-		startTimeProto = nil
-	} else {
-		startTimeProto, err = ptypes.TimestampProto(startTime)
-	}
-	if defaultTime.Equal(endTime) {
-		endTimeProto = nil
-	} else {
-		endTimeProto, err = ptypes.TimestampProto(endTime)
-	}
-	if err != nil {
-		return err
-	}
+func (ac *Client) FilterAggregate(ctx context.Context, jobExecutionId string, seedID string) error {
 	req := &api.FilterAggregateRequest{
-		StartTime: startTimeProto,
-		EndTime:   endTimeProto,
+		JobExecutionId: jobExecutionId,
 		SeedId:    seedID,
 	}
 	if _, err := ac.client.FilterAggregate(ctx, req); err != nil {

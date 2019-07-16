@@ -15,6 +15,8 @@ github.com/namsral/flag v1.7.4-pre h1:b2ScHhoCUkbsq0d2C15Mv+VU8bl8hAXV8arnWiOHNZ
 github.com/namsral/flag v1.7.4-pre/go.mod h1:OXldTctbM6SWH1K899kPZcf65KxJiD7MsceFUpB5yDo=
 github.com/nlnwa/maalfrid-api v0.0.0-20181109093809-501cbb2783e1 h1:mLutrDfeZneSj3DLNM+ue7piaH6R67ei2GehVSFAaTg=
 github.com/nlnwa/maalfrid-api v0.0.0-20181109093809-501cbb2783e1/go.mod h1:zglEJSGr4yLhMgSpgJP6nvT5hmTAgxNW5P5lganR12M=
+github.com/nlnwa/maalfrid-api v0.0.0-20190716141810-f03ddd05f808 h1:RWKnhhuUWN8axRMs/qd4JHrMWAurdfu1uLj8MJ/tKz8=
+github.com/nlnwa/maalfrid-api v0.0.0-20190716141810-f03ddd05f808/go.mod h1:zglEJSGr4yLhMgSpgJP6nvT5hmTAgxNW5P5lganR12M=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 golang.org/x/arch v0.0.0-20181203225421-5a4828bb7045 h1:Pn8fQdvx+z1avAi7fdM2kRYWQNxGlavNDSyzrQg2SsU=

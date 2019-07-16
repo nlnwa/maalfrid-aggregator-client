@@ -17,10 +17,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"time"
-
 	"github.com/namsral/flag"
+	"os"
 
 	"github.com/nlnwa/maalfrid-aggregator-client/pkg/aggregator"
 	myFlag "github.com/nlnwa/maalfrid-aggregator-client/pkg/flag"
@@ -33,12 +31,10 @@ func main() {
 	servicePort := 3011
 
 	// aggregate command parameters
-	aggregateStartTime := ""
-	aggregateEndTime := ""
+	aggregateJobExecutionId := ""
 
 	// filter command parameters
-	filterStartTime := ""
-	filterEndTime := ""
+	filterJobExecutionId := ""
 	filterSeedID := ""
 
 	// sync command parameters
@@ -57,8 +53,7 @@ func main() {
 
 	// aggregate command flags
 	aggregateCommand := flag.NewFlagSet("aggregate", flag.ExitOnError)
-	aggregateCommand.StringVar(&aggregateStartTime, "start-time", aggregateStartTime, "lower bound of execution start time in RFC3339 format (inclusive)")
-	aggregateCommand.StringVar(&aggregateEndTime, "end-time", aggregateEndTime, "upper bound of execution start time in RFC3339 format (exclusive)")
+	aggregateCommand.StringVar(&aggregateJobExecutionId, "job-execution-id", aggregateJobExecutionId, "id of job execution to aggregate")
 
 	// sync command flags
 	syncCommand := flag.NewFlagSet("sync", flag.ExitOnError)
@@ -68,8 +63,7 @@ func main() {
 	// aggregate command flags
 	filterCommand := flag.NewFlagSet("filter", flag.ExitOnError)
 	filterCommand.StringVar(&filterSeedID, "seed-id", filterSeedID, "limit filtering to seed with this id")
-	filterCommand.StringVar(&filterStartTime, "start-time", filterStartTime, "lower bound of execution start time in RFC3339 format (inclusive)")
-	filterCommand.StringVar(&filterEndTime, "end-time", filterEndTime, "upper bound of execution start time in RFC3339 format (exclusive)")
+	filterCommand.StringVar(&filterJobExecutionId, "job-execution-id", filterJobExecutionId, "id of job execution to aggregate")
 
 	// detect command flags
 	detectCommand := flag.NewFlagSet("detect", flag.ExitOnError)
@@ -104,41 +98,13 @@ func main() {
 	}
 
 	if aggregateCommand.Parsed() {
-		var startTime time.Time
-		var endTime time.Time
-		if len(aggregateStartTime) > 0 {
-			startTime, err = time.Parse(time.RFC3339, aggregateStartTime)
-		}
-		if err != nil {
-			err = fmt.Errorf("invalid start-time: %s", err)
-		}
-		if len(aggregateEndTime) > 0 {
-			endTime, err = time.Parse(time.RFC3339, aggregateEndTime)
-		}
-		if err != nil {
-			err = fmt.Errorf("invalid end-time: %s", err)
-		}
-		err = runAggregation(address, startTime, endTime)
+		err = runAggregation(address, aggregateJobExecutionId)
 	} else if syncCommand.Parsed() {
 		err = syncEntities(address, entityLabels, entityName)
 	} else if detectCommand.Parsed() {
 		err = runLanguageDetection(address, detectAll)
 	} else if filterCommand.Parsed() {
-		var startTime time.Time
-		var endTime time.Time
-		if len(aggregateStartTime) > 0 {
-			startTime, err = time.Parse(time.RFC3339, aggregateStartTime)
-		}
-		if err != nil {
-			err = fmt.Errorf("invalid start-time: %s", err)
-		}
-		if len(aggregateEndTime) > 0 {
-			endTime, err = time.Parse(time.RFC3339, aggregateEndTime)
-		}
-		if err != nil {
-			err = fmt.Errorf("invalid end-time: %s", err)
-		}
-		err = filterAggregate(address, startTime, endTime, filterSeedID)
+		err = filterAggregate(address, filterJobExecutionId, filterSeedID)
 	}
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
@@ -155,22 +121,22 @@ func syncEntities(address string, labels []string, name string) error {
 	return client.SyncEntities(context.Background(), name, labels)
 }
 
-func runAggregation(address string, startTime time.Time, endTime time.Time) error {
+func runAggregation(address string, jobExecutionId string) error {
 	client := aggregator.NewClient(address)
 	if err := client.Dial(); err != nil {
 		return err
 	}
 	defer func() { _ = client.Hangup() }()
-	return client.RunAggregation(context.Background(), startTime, endTime)
+	return client.RunAggregation(context.Background(), jobExecutionId)
 }
 
-func filterAggregate(address string, startTime time.Time, endTime time.Time, seedID string) error {
+func filterAggregate(address string, jobExecutionId string, seedID string) error {
 	client := aggregator.NewClient(address)
 	if err := client.Dial(); err != nil {
 		return err
 	}
 	defer func() { _ = client.Hangup() }()
-	return client.FilterAggregate(context.Background(), startTime, endTime, seedID)
+	return client.FilterAggregate(context.Background(), jobExecutionId, seedID)
 }
 
 func runLanguageDetection(address string, detectAll bool) error {
