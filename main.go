@@ -38,8 +38,7 @@ func main() {
 	filterSeedID := ""
 
 	// sync command parameters
-	var entityLabels myFlag.ArrayFlag
-	entityName := ""
+	var seedLabels myFlag.ArrayFlag
 
 	// detect command parameters
 	detectAll := false
@@ -57,8 +56,7 @@ func main() {
 
 	// sync command flags
 	syncCommand := flag.NewFlagSet("sync", flag.ExitOnError)
-	syncCommand.Var(&entityLabels, "label", "label selector on key:value format (can be specified multiple times)")
-	syncCommand.StringVar(&entityName, "name", entityName, "only synchronize entity with matching name")
+	syncCommand.Var(&seedLabels, "label", "label selector on key:value format (can be specified multiple times)")
 
 	// aggregate command flags
 	filterCommand := flag.NewFlagSet("filter", flag.ExitOnError)
@@ -100,7 +98,7 @@ func main() {
 	if aggregateCommand.Parsed() {
 		err = runAggregation(address, aggregateJobExecutionId)
 	} else if syncCommand.Parsed() {
-		err = syncEntities(address, entityLabels, entityName)
+		err = syncEntities(address, seedLabels)
 	} else if detectCommand.Parsed() {
 		err = runLanguageDetection(address, detectAll)
 	} else if filterCommand.Parsed() {
@@ -112,13 +110,13 @@ func main() {
 	}
 }
 
-func syncEntities(address string, labels []string, name string) error {
+func syncEntities(address string, labels []string) error {
 	client := aggregator.NewClient(address)
 	if err := client.Dial(); err != nil {
 		return err
 	}
 	defer func() { _ = client.Hangup() }()
-	return client.SyncEntities(context.Background(), name, labels)
+	return client.SyncEntities(context.Background(), labels)
 }
 
 func runAggregation(address string, jobExecutionId string) error {
