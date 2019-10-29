@@ -98,7 +98,7 @@ func main() {
 	if aggregateCommand.Parsed() {
 		err = runAggregation(address, aggregateJobExecutionId)
 	} else if syncCommand.Parsed() {
-		err = syncEntities(address, seedLabels)
+		err = syncSeedsAndEntities(address, seedLabels)
 	} else if detectCommand.Parsed() {
 		err = runLanguageDetection(address, detectAll)
 	} else if filterCommand.Parsed() {
@@ -110,7 +110,7 @@ func main() {
 	}
 }
 
-func syncEntities(address string, labels []string) error {
+func syncSeedsAndEntities(address string, labels []string) error {
 	client := aggregator.NewClient(address)
 	if err := client.Dial(); err != nil {
 		return err
