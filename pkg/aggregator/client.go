@@ -91,7 +91,7 @@ func (ac *Client) FilterAggregate(ctx context.Context, jobExecutionId string, se
 }
 
 // SyncEntities calls the gRPC method with the same name.
-func (ac *Client) SyncEntities(ctx context.Context, name string, labels []string) error {
+func (ac *Client) SyncEntities(ctx context.Context, labels []string) error {
 	var labelsProto []*api.Label
 	for _, label := range labels {
 		parts := strings.Split(label, ":")
@@ -102,7 +102,6 @@ func (ac *Client) SyncEntities(ctx context.Context, name string, labels []string
 		}
 	}
 	req := &api.SyncEntitiesRequest{
-		Name:   name,
 		Labels: labelsProto,
 	}
 	if _, err := ac.client.SyncEntities(ctx, req); err != nil {
